@@ -44,7 +44,7 @@ app.get('/', (req, res) => {
 
 // Server
 const PORT = process.env.PORT || 5000;
-//app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
 
 // app.listen(PORT, () => {
 //   console.log(`🚀 Server running locally at: http://localhost:${PORT}`);
@@ -58,7 +58,6 @@ const PORT = process.env.PORT || 5000;
 
 app.use(cors({
   origin: [
-    "https://hack-orbit-aqua-sync.vercel.app",
     "https://hack-orbit-aqua-sync-fri7.vercel.app"
   ],
   credentials: true
