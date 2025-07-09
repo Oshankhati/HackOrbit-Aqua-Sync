@@ -215,10 +215,17 @@ export default function Dashboard1() {
         return;
       }
 
+      // try {
+      //   const response = await axios.get('http://localhost:5000/api/dashboard', {
+      //     headers: { Authorization: token }
+      //   });
+
       try {
-        const response = await axios.get('http://localhost:5000/api/dashboard', {
-          headers: { Authorization: token }
-        });
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+
+  const response = await axios.get(`${API_URL}/dashboard`, {
+    headers: { Authorization: token }
+  });
 
         setDashboardData({
           usageToday: response.data.usageToday ?? [],
@@ -234,9 +241,16 @@ export default function Dashboard1() {
         const prediction = localStorage.getItem('predictedUsage');
         if (prediction) setPredictedUsage(Number(prediction));
 
-        const historyRes = await axios.get('http://localhost:5000/api/predictions', {
-          headers: { Authorization: token }
-        });
+        // const historyRes = await axios.get('http://localhost:5000/api/predictions', {
+        //   headers: { Authorization: token }
+        // });
+
+        const API_URLS = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+
+const historyRes = await axios.get(`${API_URLS}/predictions`, {
+  headers: { Authorization: token }
+});
+
         setHistoricalPredictions(historyRes.data);
 
       } catch (error) {

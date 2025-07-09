@@ -6,19 +6,36 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // const fetchUsers = async () => {
+    //   const token = localStorage.getItem('token');
+    //   try {
+    //     const response = await axios.get('http://localhost:5000/api/admin/users', {
+    //       headers: { Authorization: token },
+    //     });
+    //     setUsers(response.data);
+    //   } catch (error) {
+    //     console.error('Error fetching users:', error);
+    //   } finally {
+    //     setLoading(false);
+    //   }
+    // };
+
     const fetchUsers = async () => {
-      const token = localStorage.getItem('token');
-      try {
-        const response = await axios.get('http://localhost:5000/api/admin/users', {
-          headers: { Authorization: token },
-        });
-        setUsers(response.data);
-      } catch (error) {
-        console.error('Error fetching users:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const token = localStorage.getItem('token');
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+
+  try {
+    const response = await axios.get(`${API_URL}/admin/users`, {
+      headers: { Authorization: token },
+    });
+    setUsers(response.data);
+  } catch (error) {
+    console.error('Error fetching users:', error);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
     fetchUsers();
   }, []);

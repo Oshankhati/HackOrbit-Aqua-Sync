@@ -164,11 +164,19 @@ export default function Signup() {
 
     try {
       setLoading(true);
-      const response = await axios.post('http://localhost:5000/api/signup', {
-        name,
-        email,
-        password
-      });
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+
+      // const response = await axios.post('http://localhost:5000/api/signup', {
+      //   name,
+      //   email,
+      //   password
+      // });
+      const response = await axios.post(`${API_URL}/signup`, {
+  name,
+  email,
+  password,
+});
+
 
       if (response.status === 200) {
         const { token, user } = response.data;
