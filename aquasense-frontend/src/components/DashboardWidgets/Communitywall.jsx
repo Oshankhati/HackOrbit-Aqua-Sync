@@ -1,101 +1,265 @@
-// 
 
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+
+const currentUser = JSON.parse(localStorage.getItem('user')) || {};
 
 export default function Communitywall() {
   const [message, setMessage] = useState('');
+  const [image, setImage] = useState(null);
   const [posts, setPosts] = useState([]);
+  const [previewUrl, setPreviewUrl] = useState(null);
 
-  const handlePost = (e) => {
-    e.preventDefault();
-    if (!message.trim()) return;
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
 
-    const newPost = {
-      id: Date.now(),
-      content: message,
-      likes: 0,
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchPosts = async () => {
+      try {
+        setLoading(true);
+        await new Promise(resolve => setTimeout(resolve, 1000)); // simulate delay
+        const res = await axios.get(`http://localhost:5000/api/posts?page=${page}&limit=5`);
+        if (isMounted) {
+          setPosts(prev => {
+            const newPosts = res.data.posts.filter(
+              newPost => !prev.some(existing => existing._id === newPost._id)
+            );
+            return [...prev, ...newPosts];
+          });
+
+          const totalLoaded = page * 5;
+          setHasMore(totalLoaded < res.data.totalCount);
+        }
+      } catch (err) {
+        console.error('Fetch error:', err);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    setPosts([newPost, ...posts]);
-    setMessage('');
+    fetchPosts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [page]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 100 &&
+        hasMore &&
+        !loading
+      ) {
+        setPage(prev => prev + 1);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [hasMore, loading]);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setPreviewUrl(reader.result);
+      reader.readAsDataURL(file);
+    }
   };
 
-  const handleLike = (id) => {
-    const updatedPosts = posts.map((post) =>
-      post.id === id ? { ...post, likes: post.likes + 1 } : post
-    );
-    setPosts(updatedPosts);
+  const handlePost = async (e) => {
+    e.preventDefault();
+    if (!message.trim() && !image) return;
+
+    const formData = new FormData();
+    formData.append('caption', message);
+    if (image) formData.append('image', image);
+    formData.append('userId', currentUser?.id);
+
+    try {
+      const res = await axios.post('http://localhost:5000/api/posts', formData);
+      const data = res.data;
+      setPosts((prev) => {
+        const withoutDuplicate = prev.filter((p) => p._id !== data._id);
+        return [data, ...withoutDuplicate];
+      });
+      setMessage('');
+      setImage(null);
+      setPreviewUrl(null);
+      setPage(1);
+    } catch (err) {
+      console.error('Post error:', err);
+    }
   };
 
-  const handleDelete = (id) => {
-    setPosts(posts.filter((post) => post.id !== id));
+  const handleLike = async (postId) => {
+    try {
+      const res = await axios.post(`http://localhost:5000/api/posts/${postId}/like`, {
+        userId: currentUser?.id,
+      });
+      setPosts(posts.map((p) => (p._id === postId ? res.data : p)));
+    } catch (err) {
+      console.error('Like error:', err);
+    }
+  };
+
+  const handleComment = async (e, postId) => {
+    e.preventDefault();
+    const commentText = e.target.elements[`comment-${postId}`].value.trim();
+    if (!commentText) return;
+
+    try {
+      const res = await axios.post(`http://localhost:5000/api/posts/${postId}/comment`, {
+        text: commentText,
+        userId: currentUser?.id,
+      });
+      setPosts(posts.map((p) => (p._id === postId ? res.data : p)));
+      e.target.reset();
+    } catch (err) {
+      console.error('Comment error:', err);
+    }
+  };
+
+  const handleDeletePost = async (postId) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/posts/${postId}`);
+      setPosts(posts.filter((p) => p._id !== postId));
+    } catch (err) {
+      console.error('Delete post error:', err);
+    }
+  };
+
+  const handleDeleteComment = async (postId, commentId) => {
+    try {
+      const res = await axios.delete(`http://localhost:5000/api/posts/${postId}/comment/${commentId}`);
+      setPosts(posts.map((p) => (p._id === postId ? res.data : p)));
+    } catch (err) {
+      console.error('Delete comment error:', err);
+    }
   };
 
   return (
-    <section
-      className="bg-gradient-to-br from-white via-indigo-50 to-indigo-100 p-6 rounded-2xl shadow-lg max-w-xl mx-auto"
-      aria-label="Community Wall"
-    >
-      <h2 className="text-2xl font-bold mb-5 text-indigo-700">🗣 Community Wall</h2>
+    <section className="bg-gradient-to-br from-white via-indigo-50 to-indigo-100 p-6 rounded-lg shadow-xl max-w-3xl mx-auto my-10">
+      <h2 className="text-3xl font-bold text-indigo-800 mb-6 text-center">📸 Community Wall</h2>
 
-      {/* Post Input */}
-      <form onSubmit={handlePost} className="space-y-3 mb-8" aria-live="polite">
-        <label htmlFor="postMessage" className="sr-only">
-          Share a water-saving tip or question
-        </label>
+      <form onSubmit={handlePost} className="space-y-4 mb-8 bg-white p-5 rounded-lg shadow">
         <textarea
-          id="postMessage"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Share a water-saving tip or question..."
-          rows={3}
-          className="w-full rounded-lg border border-indigo-300 bg-indigo-50 px-4 py-3 resize-none
-                     text-indigo-900 placeholder-indigo-500
-                     focus:outline-none focus:ring-4 focus:ring-indigo-400 transition"
+          placeholder="What's on your mind?"
+          className="w-full border border-gray-300 rounded-lg px-4 py-3 resize-none text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          rows={4}
         />
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleImageChange}
+          className="block text-sm text-gray-600"
+        />
+        {previewUrl && (
+          <img
+            src={previewUrl}
+            alt="Preview"
+            className="w-full max-h-80 object-contain mt-2 rounded-lg border border-gray-300 shadow-sm"
+          />
+        )}
         <button
           type="submit"
-          className="w-full bg-indigo-600 text-white font-semibold rounded-lg py-3
-                     hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-500 transition"
-          disabled={!message.trim()}
-          aria-disabled={!message.trim()}
+          className="bg-indigo-600 text-white px-5 py-2 rounded-lg hover:bg-indigo-700 transition w-full"
         >
           Post
         </button>
       </form>
 
-      {/* Post Feed */}
-      <div className="space-y-5">
+      <div className="space-y-8">
         {posts.length === 0 ? (
-          <p className="text-center text-indigo-600 italic">No posts yet. Be the first to share!</p>
+          <p className="text-gray-500 text-sm text-center">No posts yet. Be the first to share!</p>
         ) : (
           posts.map((post) => (
-            <article
-              key={post.id}
-              className="bg-indigo-100 p-4 rounded-xl shadow-md"
-              aria-label={`Post: ${post.content.substring(0, 20)}...`}
-            >
-              <p className="text-indigo-900">{post.content}</p>
-              <div className="flex items-center justify-between mt-3 text-indigo-700 text-sm">
-                <button
-                  type="button"
-                  onClick={() => handleLike(post.id)}
-                  className="hover:underline focus:outline-none focus:ring-2 focus:ring-indigo-400 rounded px-2"
-                  aria-label={`Like post: ${post.content.substring(0, 20)}. Currently liked ${post.likes} times`}
-                >
-                  👍 Like ({post.likes})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleDelete(post.id)}
-                  className="hover:underline text-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 rounded px-2"
-                  aria-label={`Delete post: ${post.content.substring(0, 20)}`}
-                >
-                  🗑 Delete
-                </button>
+            <div key={post._id} className="bg-white border border-gray-200 rounded-lg p-5 shadow-md transition hover:shadow-lg">
+              {post.imageUrl && (
+                <img
+                  src={`http://localhost:5000${post.imageUrl}`}
+                  alt="User Post"
+                  className="mb-4 rounded-md w-full max-h-96 object-cover"
+                />
+              )}
+
+              <div className="flex justify-between items-center text-sm text-gray-500 mb-2">
+                <span>Posted by: <span className="font-semibold text-indigo-600">{post.author?.name || 'Anonymous'}</span></span>
+                {post.author?._id === currentUser?.id && (
+                  <button
+                    onClick={() => handleDeletePost(post._id)}
+                    className="text-red-500 text-xs hover:underline ml-2"
+                    title="Delete Post"
+                  >
+                    🗑 Delete
+                  </button>
+                )}
               </div>
-            </article>
+
+              {post.caption && (
+                <p className="text-gray-800 mb-3 text-sm">{post.caption}</p>
+              )}
+
+              <button
+                onClick={() => handleLike(post._id)}
+                className="text-sm text-indigo-600 hover:underline mb-3"
+              >
+                👍 {post.likes.length} {post.likes.length === 1 ? 'Like' : 'Likes'}
+              </button>
+
+              {post.comments.length > 0 && (
+                <div className="mt-3 space-y-2 text-sm text-gray-700">
+                  {post.comments.map((comment) => (
+                    <div
+                      key={comment._id}
+                      className="bg-indigo-50 px-3 py-2 rounded flex justify-between items-start"
+                    >
+                      <span>
+                        <span className="font-medium text-indigo-700">{comment.user?.name || 'Anonymous'}:</span>{' '}
+                        {comment.text}
+                      </span>
+                      {comment.user?._id === currentUser?.id && (
+                        <button
+                          onClick={() => handleDeleteComment(post._id, comment._id)}
+                          className="text-red-500 text-xs hover:underline ml-2"
+                          title="Delete Comment"
+                        >
+                          🗑
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <form
+                onSubmit={(e) => handleComment(e, post._id)}
+                className="mt-4 flex items-center gap-2"
+              >
+                <input
+                  name={`comment-${post._id}`}
+                  placeholder="Add a comment..."
+                  className="border border-gray-300 px-3 py-2 rounded-md w-full text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                />
+                <button
+                  type="submit"
+                  className="text-sm bg-indigo-600 text-white px-3 py-1.5 rounded-md hover:bg-indigo-700 transition"
+                >
+                  Comment
+                </button>
+              </form>
+            </div>
           ))
+        )}
+        {loading && hasMore && (
+          <p className="text-center text-gray-400 text-sm mt-4">Loading more posts...</p>
         )}
       </div>
     </section>

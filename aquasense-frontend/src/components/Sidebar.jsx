@@ -1,10 +1,9 @@
 
-
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 
 const navItems = [
-  { path: '/Dashboard1', label: 'Dashboard1' },
+  { path: '/Dashboard1', label: 'Dashboard' },
   { path: '/Waterusageoverview', label: 'Water Usage Overview' },
   { path: '/Waterinput', label: 'Water Input' },
   { path: '/Usagequota', label: 'Usage Quota' },
@@ -32,11 +31,21 @@ export default function Sidebar({ isOpen, onClose, className = '' }) {
       <aside
         className={`
           ${className}
-          bg-indigo-700 text-white p-6 flex flex-col
+          bg-indigo-700 text-white p-6 flex flex-col sticky top-0 h-screen transition-transform duration-300 z-40
         `}
         aria-label="Primary Navigation"
       >
-        <h1 className="text-2xl font-bold mb-8">AquaSense</h1>
+        {/* Top row: Logo and Close Button */}
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-2xl font-bold">AquaSense</h1>
+          <button
+            onClick={onClose}
+            className="text-white text-2xl focus:outline-none hover:text-gray-300"
+            title="Hide Sidebar"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ffffff"><path d="M588-132 440-280l148-148 56 58-50 50h96q29 0 49.5-20.5T760-390q0-29-20.5-49.5T690-460H160v-80h530q63 0 106.5 43.5T840-390q0 63-43.5 106.5T690-240h-96l50 50-56 58ZM160-240v-80h200v80H160Zm0-440v-80h640v80H160Z"/></svg>
+          </button>
+        </div>
 
         <nav className="flex flex-col space-y-3 flex-1 overflow-auto" role="navigation" tabIndex={0}>
           {navItems.map(({ path, label }) => (

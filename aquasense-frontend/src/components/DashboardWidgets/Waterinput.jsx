@@ -1,32 +1,3 @@
-
-// import React from 'react';
-
-// export default function Waterinput({ onDailyTotalChange }) {
-//   return (
-//     <div className="bg-white p-6 rounded shadow" role="region" aria-label="Water Used Today Input">
-//       <h2 className="text-xl font-semibold mb-2">🚰 Water Used Today</h2>
-      
-//       <label htmlFor="waterUsedInput" className="sr-only">
-//         Enter water used today in liters
-//       </label>
-      
-//       <input
-//         id="waterUsedInput"
-//         type="number"
-//         min="0"
-//         onChange={(e) => onDailyTotalChange(Number(e.target.value))}
-//         placeholder="Enter amount in liters"
-//         className="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-//         aria-describedby="waterUsedHelp"
-//       />
-      
-//       <small id="waterUsedHelp" className="text-gray-500">
-//         Please enter the total water used today in liters.
-//       </small>
-//     </div>
-//   );
-// }
-
 import React, { useState, useEffect } from 'react';
 
 export default function Waterinput({ onDailyTotalChange }) {
