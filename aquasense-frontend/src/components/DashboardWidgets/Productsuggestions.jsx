@@ -38,7 +38,7 @@ export default function ProductSuggestions() {
             key={product.id}
             className="border border-green-200 rounded-xl overflow-hidden shadow-sm bg-white hover:shadow-lg focus-within:shadow-lg transition-shadow duration-300"
           >
-            <img
+            <img 
               src={product.image}
               alt={`Image of ${product.name}`}
               loading="lazy"
