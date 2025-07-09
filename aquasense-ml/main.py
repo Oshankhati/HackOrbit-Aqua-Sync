@@ -21,7 +21,7 @@ app.add_middleware(
     # # adjust if frontend URL differs
     allow_origins=[
         "http://localhost:3000",
-        "https://hack-orbit-aqua-sync.vercel.app"
+        "https://hack-orbit-aqua-sync-4dae.vercel.app"
     ],
     allow_credentials=True,
     allow_methods=["*"],
