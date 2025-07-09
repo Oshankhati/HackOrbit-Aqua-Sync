@@ -46,7 +46,20 @@ app.get('/', (req, res) => {
 const PORT = process.env.PORT || 5000;
 //app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running locally at: http://localhost:${PORT}`);
-  console.log(`🌐 Live deployed app at: https://hack-orbit-aqua-sync-fri7.vercel.app/`);
-});
+// app.listen(PORT, () => {
+//   console.log(`🚀 Server running locally at: http://localhost:${PORT}`);
+//   console.log(`🌐 Live deployed app at: https://hack-orbit-aqua-sync-fri7.vercel.app/`);
+// });
+
+// app.use(cors({
+//   origin: ["https://hack-orbit-aqua-sync.vercel.app/", "https://hack-orbit-aqua-sync-fri7.vercel.app/" ],
+//   credentials: true
+// }));
+
+app.use(cors({
+  origin: [
+    "https://hack-orbit-aqua-sync.vercel.app",
+    "https://hack-orbit-aqua-sync-fri7.vercel.app"
+  ],
+  credentials: true
+}));
