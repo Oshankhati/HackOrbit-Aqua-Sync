@@ -58,7 +58,9 @@ app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PO
 
 app.use(cors({
   origin: [
-    "https://hack-orbit-aqua-sync-fri7.vercel.app"
+    "https://hack-orbit-aqua-sync-fse8.vercel.app/"
   ],
   credentials: true
 }));
+
+
